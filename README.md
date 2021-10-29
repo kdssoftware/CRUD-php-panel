@@ -49,3 +49,9 @@ At the moment if you have a header that you want to ouput before the CRUD panel,
     //then renderPaneel()
 ```
 Footers should be rendered after the call to renderPaneel()
+
+### Screenshots
+![image](https://user-images.githubusercontent.com/10829524/139453827-16329a48-9906-461c-8d84-e2e4a5cc9c90.png)
+
+![image](https://user-images.githubusercontent.com/10829524/139453862-55f42b24-1c36-4fc6-93eb-e8fc0f00d4d2.png)
+
