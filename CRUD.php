@@ -271,7 +271,6 @@ class Tabel{
     public function __construct($TABLE_NAME,$TABLE_SCHEMA,$link,$href){
         $qry =   "SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '".$TABLE_SCHEMA."' AND TABLE_NAME = '".$TABLE_NAME."';";
         $result = mysqli_query($GLOBALS["link"], $qry);
-        // error_log("CRUD:".$qry);
         while($row = mysqli_fetch_assoc($result)){
             $header = new Header ($row);
             array_push($this->headers, $header);
@@ -326,7 +325,6 @@ class Tabel{
         while($row = mysqli_fetch_assoc($result)){
             $data[] = $row;
         }
-        error_log("CRUD:".$qry);
         return $data;
     }
 
@@ -337,7 +335,6 @@ class Tabel{
         while($row = mysqli_fetch_assoc($result)){
             $data[] = $row;
         }
-        error_log("CRUD:".$qry);
         return $data;
     }
 
@@ -348,7 +345,6 @@ class Tabel{
         while($row = mysqli_fetch_assoc($result)){
             $data[] = $row;
         }
-        //      error_log("CRUD:".$qry);
         return $data;
     }
     public function getFirstPrimaryKeyName(){
@@ -468,8 +464,6 @@ class Tabel{
         foreach($this->headers as $header){
             $dataOfCurrentEntry = current($this->getDataByPrimaryKey($PRIMARY_KEY_NAME,$PRIMARY_KEY_VALUE));
             if($header->COLUMN_NAME != $PRIMARY_KEY_NAME){
-                error_log($header->COLUMN_NAME);
-                error_log($dataOfCurrentEntry[$header->COLUMN_NAME]);
                 $string .= $header->renderUpdate($dataOfCurrentEntry[$header->COLUMN_NAME]);
             }else{
                 $string .= "<input type='hidden' name='primary_key_name' value='".$PRIMARY_KEY_NAME."'>";
@@ -519,7 +513,6 @@ class Tabel{
     public function delete($PRIMARY_KEY_NAME,$PRIMARY_KEY_VALUE){
         $qry = "DELETE FROM `".$this->TABLE_SCHEMA."`.`".$this->TABLE_NAME."` WHERE `".$PRIMARY_KEY_NAME."` = '".$PRIMARY_KEY_VALUE."';";
         mysqli_query($this->link, $qry);
-        error_log("CRUD:".$qry);
         return;
     }
 
@@ -606,8 +599,6 @@ class Tabel{
         }
         $qry .= " WHERE `".$data["primary_key_name"]."` = ".$data["primary_key_value"].";";
         $result = mysqli_query($this->link, $qry);
-        error_log("CRUD:".$qry);
-        error_log("CRUD:".json_encode($data));
         return;
     }
 
@@ -713,7 +704,6 @@ class Tabel{
         if(!$result){
             throw new Exception("Error bij het aanmaken van een nieuw record: ".mysqli_error($this->link));
         }
-        error_log("CRUD:".$qry);
         return;
     }
 
