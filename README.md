@@ -1,5 +1,6 @@
 # CRUD-php-panel
 1 file to render an entire CRUD panel
+Currently only in Dutch
 
 #### requirements
 - minimum php 5.4 (tested)
@@ -34,3 +35,17 @@ $CRUDS = new CRUD(
         "db"
     );
 ```
+
+
+
+### Current bugs:
+
+At the moment if you have a header that you want to ouput before the CRUD panel, do it like this:
+
+```php
+    if($_SERVER['REQUEST_METHOD'] == "GET") {
+        include($_SERVER['DOCUMENT_ROOT'] . '/includes/header.inc');
+    }
+    //then renderPaneel()
+```
+Footers should be rendered after the call to renderPaneel()
