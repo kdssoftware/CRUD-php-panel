@@ -5,6 +5,7 @@ Currently only in Dutch
 #### requirements
 - minimum php 5.4 (tested)
 - mysql
+- bootstrap version 4.6 minimum
 
 ### functionalities
 - create new records
