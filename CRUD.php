@@ -1,6 +1,11 @@
 <?php
-include_once($_SERVER['DOCUMENT_ROOT']. "/databaseconnectie/conn.php");
-include_once($_SERVER['DOCUMENT_ROOT']. "/databaseconnectie/debug.php");
+/**
+ * CRUD - Create, Read, Update, Delete Paneel
+ * @author: Karel De Smet
+ * @version: 1.0
+ * @date: 29/10/2021
+ */
+
 class CRUD{
     public $tabellen;
     public $TABLE_SCHEMA;
@@ -10,7 +15,6 @@ class CRUD{
     public $search = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="search" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-search fa-w-16 fa-3x"><path fill="currentColor" d="M508.5 481.6l-129-129c-2.3-2.3-5.3-3.5-8.5-3.5h-10.3C395 312 416 262.5 416 208 416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c54.5 0 104-21 141.1-55.2V371c0 3.2 1.3 6.2 3.5 8.5l129 129c4.7 4.7 12.3 4.7 17 0l9.9-9.9c4.7-4.7 4.7-12.3 0-17zM208 384c-97.3 0-176-78.7-176-176S110.7 32 208 32s176 78.7 176 176-78.7 176-176 176z" class=""></path></svg>';
     public $filter = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="filter" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-filter fa-w-16 fa-3x"><path fill="currentColor" d="M479.968 0H32.038C3.613 0-10.729 34.487 9.41 54.627L192 237.255V424a31.996 31.996 0 0 0 10.928 24.082l64 55.983c20.438 17.883 53.072 3.68 53.072-24.082V237.255L502.595 54.627C522.695 34.528 508.45 0 479.968 0zM288 224v256l-64-56V224L32 32h448L288 224z" class=""></path></svg>';
     public function __construct($tabellen,$link,$href,$TABLE_SCHEMA){
-        //check if is array
         if(!is_array($tabellen)){
             throw new Exception("Lijst met tabellen moeten als Array worden opgegeven");
         }
@@ -18,7 +22,6 @@ class CRUD{
         $this->href = $href;
         $tabellen_as_objects = array();
         foreach($tabellen as $tabel){
-            //check if is string
             if(!is_string($tabel)){
                 throw new Exception("Tabel moet is niet als tekst meegeven.");
             }
@@ -41,7 +44,6 @@ class CRUD{
     public function renderNavbar($active_TABLE_NAME=null,$search=null,$update_or_delete=null,$create=null){
         $navbar = "";
         $navbar .='<nav class="navbar navbar-expand-lg navbar-light bg-light">';
-        // $navbar .='<div class="navbar-brand" href="#">CRUD paneel</div>';
         $navbar .='<ul class="navbar-nav mr-auto row">';
         $navbar .='<li class="nav-item dropdown col" style="list-style-type:none;">';
         $navbar .='<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
@@ -53,7 +55,6 @@ class CRUD{
         $navbar .='</a>';
         $navbar .='<div class="dropdown-menu list-group" aria-labelledby="navbarDropdown">';
         foreach($this->tabellen as $tabel){
-            //current path plus table query string
             $navbar .='<a class="dropdown-item text-reset list-group-item list-group-item-action '.($tabel->TABLE_NAME == $active_TABLE_NAME?"active text-white":"text-muted").'" href="'.$this->href.'?table='.$tabel->TABLE_NAME.'">';
             $navbar .= $tabel->TABLE_NAME;
             $navbar .='</a>';
@@ -61,13 +62,17 @@ class CRUD{
         $navbar .='</div>';
         $navbar .='</li>';
         if(isset($active_TABLE_NAME)){
-            if(isset($update_or_delete) || isset($create)){
+            if(isset($update_or_delete)){
                 $navbar .='<li class="nav-item col" style="list-style-type:none;">';
                 $navbar .='<p class="nav-link active">';
                 $navbar .='<b>Verwijder of wijzig entry</b>';
                 $navbar .='</p>';
                 $navbar .='</li>';
-            } else if(isset($active_TABLE_NAME)){
+                $navbar .='<li class="nav-item col" style="list-style-type:none;">';
+                $navbar .='<button class="btn btn-info" onclick=\'window.history.back()\'>Terug</button>';
+                $navbar .='</li>';
+
+            } else if(isset($active_TABLE_NAME) && !isset($create)){
                 $navbar .='<li class="nav-item col" style="list-style-type:none;">';
                 $navbar .='<a href="'.$this->href.'?table='.$active_TABLE_NAME.'&create=1"'.(isset($search) ? '&search='.$search : '').' class="nav-link">';
                 $navbar .='<button type="button" class="btn btn-primary">Nieuw record</button>';
