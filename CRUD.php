@@ -2,8 +2,8 @@
 /**
  * CRUD - Create, Read, Update, Delete Paneel
  * @author: Karel De Smet
- * @version: 1.0
- * @date: 29/10/2021
+ * @version: 1.1
+ * @date: 03/11/2021
  */
 
 class CRUD{
@@ -365,6 +365,9 @@ class Tabel{
             $string .="<div style='display: flex;justify-content: space-between;align-items: center;'>";
             $string .="<div>";
             $string .= $header;
+            if(isset($header->COLUMN_COMMENT) && trim($header->COLUMN_COMMENT) !=""){
+                $string .= "<small class='text-muted'>&nbsp;&nbsp;&nbsp;".$header->COLUMN_COMMENT."</small>";
+            }
             $string .= "<br/>";
             $string .= "<small>".$header->COLUMN_TYPE."</small>";
             $string .= "</div>";
