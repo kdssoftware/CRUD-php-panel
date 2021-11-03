@@ -21,7 +21,7 @@ Currently only in Dutch
 include_once "./CRUD.php";
 
 //initialize the CRUD panel 
-$CRUDS = new CRUD(
+$CRUD = new CRUD(
 //all the tables you want to show in array
       array(
         "users",
@@ -35,6 +35,7 @@ $CRUDS = new CRUD(
 //the database scheme 
         "db"
     );
+    $CRUD->renderPaneel();
 ```
 
 
