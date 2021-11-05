@@ -2,7 +2,7 @@
 /**
  * CRUD - Create, Read, Update, Delete Paneel
  * @author: Karel De Smet
- * @version: 1.1
+ * @version: 1.2
  * @date: 03/11/2021
  */
 
@@ -15,7 +15,7 @@ class CRUD{
     public $search = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="search" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-search fa-w-16 fa-3x"><path fill="currentColor" d="M508.5 481.6l-129-129c-2.3-2.3-5.3-3.5-8.5-3.5h-10.3C395 312 416 262.5 416 208 416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c54.5 0 104-21 141.1-55.2V371c0 3.2 1.3 6.2 3.5 8.5l129 129c4.7 4.7 12.3 4.7 17 0l9.9-9.9c4.7-4.7 4.7-12.3 0-17zM208 384c-97.3 0-176-78.7-176-176S110.7 32 208 32s176 78.7 176 176-78.7 176-176 176z" class=""></path></svg>';
     public $filter = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="filter" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-filter fa-w-16 fa-3x"><path fill="currentColor" d="M479.968 0H32.038C3.613 0-10.729 34.487 9.41 54.627L192 237.255V424a31.996 31.996 0 0 0 10.928 24.082l64 55.983c20.438 17.883 53.072 3.68 53.072-24.082V237.255L502.595 54.627C522.695 34.528 508.45 0 479.968 0zM288 224v256l-64-56V224L32 32h448L288 224z" class=""></path></svg>';
     public function __construct($tabellen,$link,$href,$TABLE_SCHEMA){
-        if(!is_array($tabellen)){
+        if(!is_array($tabellen)) {
             throw new Exception("Lijst met tabellen moeten als Array worden opgegeven");
         }
         $this->link = $link;
@@ -174,6 +174,16 @@ class CRUD{
             isset($_REQUEST['page'] ) ? $_REQUEST['page'] : null
         );
     }
+    private function echoScript(){
+        echo "<script>";
+        echo "const tableNameCurrent = new URLSearchParams(window. location. search).get('table');";
+        echo 'const tableNames ='.json_encode($this->tabellen).'.map(t=>t.TABLE_NAME).filter(t=>t!==tableNameCurrent);';
+        echo 'const tables ='.json_encode($this->tabellen).';';
+        echo 'function startContextMenuEvent(e){if("TD"==e.target.nodeName&&"TR"==e.target.parentNode.nodeName){e.target.id;let t=e.target.innerText,n=e.target.parentNode.dataset.editlink;document.getElementsByClassName("ContextMenu-item")[0].onclick=function(){location.href=n};const o=document.getElementsByClassName("ContextMenu_submenu")[0],a=tableNames.map(e=>`<li class="ContextMenu-item" onclick="location.href=\'https://ilt.kuleuven.be/stan/admin/crud/?table=${e}&update_or_delete=1&primary_key_name=id&primary_key_value=${t}&page=${new URLSearchParams(window.location.search).get("page")}&sort_column_name=${new URLSearchParams(window.location.search).get("sort_column_name")}&sort_direction=${new URLSearchParams(window.location.search).get("sort_direction")}&limit=${new URLSearchParams(window.location.search).get("limit")}\'">${e}</li>`);o.innerHTML=a.join(""),changeContextMenuXY(e.clientX,e.clientY+window.scrollY),showContextMenu()}}function dismissContextMenu(){console.log("dismissing context menu"),document.getElementsByClassName("ContextMenu")[0].classList.remove("is-open")}function showContextMenu(){document.getElementsByClassName("ContextMenu")[0].classList.add("is-open")}function changeContextMenuXY(e,t){let n=document.getElementsByClassName("ContextMenu")[0];n.style.left=e+"px",n.style.top=t+"px"}document.addEventListener("click",function(e){document.getElementsByClassName("ContextMenu")[0].classList.contains("is-open")&&dismissContextMenu()},!1),document.addEventListener?document.addEventListener("contextmenu",function(e){e.preventDefault(),startContextMenuEvent(e)},!1):document.attachEvent("oncontextmenu",function(e){e.preventDefault(),startContextMenuEvent(e),window.event.returnValue=!1});';
+        echo 'function addCssLinkToHead(e){var t=document.createElement("link");t.type="text/css",t.rel="stylesheet",t.href=e,document.getElementsByTagName("head")[0].appendChild(t)}';
+        echo 'addCssLinkToHead("https://ilt.kuleuven.be/php72/includes/styles/contextMenu.css");';
+        echo "</script>";
+    }
 
     public function renderPaneel(){
         try{
@@ -181,6 +191,22 @@ class CRUD{
                 if(!is_string($this->href) || empty($this->href)){
                     throw new Exception("Parameter 'href' moet een string zijn en niet leeg zijn, dit zou de default locatie moeten zijn waar het paneel wordt getoont.");
                 }
+                //add scripts
+                echo '<ul
+                    class="ContextMenu ContextMenu--theme-default"
+                    data-contextmenu="0"
+                    tabindex="-1"
+                    style="left: 144px; top: 129px"
+                    >
+                    <li class="ContextMenu-item">Aanpassen...</li>
+                    <li class="ContextMenu-item" id="ContextMenu_submenuOpener">
+                    Aanpassen als key in...
+                    <img style="width: 19px;margin-top: 3px;"src="/php72/ici/_images/icons/arrow-right-grey.svg" alt=">">
+                        <ul class="ContextMenu_submenu ContextMenu ContextMenu--theme-default" data-contextmenu="1" tabindex="-1" style="left: 204px;top: 40px;">
+                        </ul>
+                    </li>
+                </ul>';
+                $this->echoScript();
                 if(!isset($_REQUEST["page"]) && !isset($_REQUEST["limit"]) && !isset($_REQUEST["sort_direction"]) && isset($_REQUEST["table"])
                     && !isset($_REQUEST["create"])
                     && !isset($_REQUEST["update"])
@@ -403,6 +429,13 @@ class Tabel{
         foreach($data as $row){
             /*add primary key value and primary key name to the href*/
             $string .= "<tr style='cursor:pointer;'";
+            $string .= " data-editlink='".$this->href."?table=".$this->TABLE_NAME."&update_or_delete=1".(isset($search)?"&search=".$search:"");
+            $string .='&primary_key_name='.$this->getFirstPrimaryKeyName().'&primary_key_value='.$row[$this->getFirstPrimaryKeyName()].'';
+            $string .= isset($_REQUEST["page"]) ? '&page='.$_REQUEST["page"] : '';
+            $string .=isset($_REQUEST["sort_column_name"]) ? '&sort_column_name='.$_REQUEST["sort_column_name"] : '';
+            $string .=isset($_REQUEST["sort_direction"]) ? '&sort_direction='.$_REQUEST["sort_direction"] : '';
+            $string .=isset($_REQUEST["limit"]) ? '&limit='.$_REQUEST["limit"] : '';
+            $string .= "'";
             $string .='onclick="window.location.href=\''.$this->href."?table=".$this->TABLE_NAME."&update_or_delete=1".(isset($search)?"&search=".$search:"");
             $string .='&primary_key_name='.$this->getFirstPrimaryKeyName().'&primary_key_value='.$row[$this->getFirstPrimaryKeyName()].'';
             $string .= isset($_REQUEST["page"]) ? '&page='.$_REQUEST["page"] : '';
@@ -466,6 +499,9 @@ class Tabel{
         $string .= "<div class='row' style='padding: 22px;border: 1px solid #b7b7b7;margin: 10px;border-radius: 5px;'>";
         foreach($this->headers as $header){
             $dataOfCurrentEntry = current($this->getDataByPrimaryKey($PRIMARY_KEY_NAME,$PRIMARY_KEY_VALUE));
+            if(empty($dataOfCurrentEntry)){
+                throw new Exception("Deze key heeft bestaat niet in deze tabel.");
+            }
             if($header->COLUMN_NAME != $PRIMARY_KEY_NAME){
                 $string .= $header->renderUpdate($dataOfCurrentEntry[$header->COLUMN_NAME]);
             }else{
