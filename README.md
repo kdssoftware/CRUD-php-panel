@@ -57,3 +57,7 @@ Footers should be rendered after the call to renderPaneel()
 
 ![image](https://user-images.githubusercontent.com/10829524/139453862-55f42b24-1c36-4fc6-93eb-e8fc0f00d4d2.png)
 
+From v1.2
+![image](https://user-images.githubusercontent.com/10829524/140503346-81eff0d8-8e29-4a93-b584-30c29f21e5eb.png)
+
+
