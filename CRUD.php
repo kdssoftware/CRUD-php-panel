@@ -1,20 +1,33 @@
 <?php
 /**
  * CRUD - Create, Read, Update, Delete Paneel
- * @author: Karel De Smet
- * @version: 1.2
- * @date: 03/11/2021
+ * Single file.
+ * ! If you want to excel download functionality install 'composer require PhpOffice/PhpSpreadsheet'
+ * ! populate $downloadFolder and $autoload_file with the correct values
+ * @requires: PHP ^5.4
+ * @requires: Bootstrap ^4.6
+ * @requires: MySQL
+ * @author: Karel De Smet (snakehead007)
+ * @version: 1.4
+ * @since: 05/11/2021
+ * @link: https://github.com/snakehead007/CRUD-php-panel
+ * @lastUpdated: 23/02/2022
  */
 
 class CRUD{
     public $tabellen;
     public $TABLE_SCHEMA;
+    public $downloadFolder;
+    public $autoload_file;
     public $link;
     public $href;
     public $chevron_double_right = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-double-right" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-chevron-double-right fa-w-16 fa-3x"><path fill="currentColor" d="M477.5 273L283.1 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.7-22.7c-9.4-9.4-9.4-24.5 0-33.9l154-154.7-154-154.7c-9.3-9.4-9.3-24.5 0-33.9l22.7-22.7c9.4-9.4 24.6-9.4 33.9 0L477.5 239c9.3 9.4 9.3 24.6 0 34zm-192-34L91.1 44.7c-9.4-9.4-24.6-9.4-33.9 0L34.5 67.4c-9.4 9.4-9.4 24.5 0 33.9l154 154.7-154 154.7c-9.3 9.4-9.3 24.5 0 33.9l22.7 22.7c9.4 9.4 24.6 9.4 33.9 0L285.5 273c9.3-9.4 9.3-24.6 0-34z" class=""></path></svg>';
     public $search = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="search" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-search fa-w-16 fa-3x"><path fill="currentColor" d="M508.5 481.6l-129-129c-2.3-2.3-5.3-3.5-8.5-3.5h-10.3C395 312 416 262.5 416 208 416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c54.5 0 104-21 141.1-55.2V371c0 3.2 1.3 6.2 3.5 8.5l129 129c4.7 4.7 12.3 4.7 17 0l9.9-9.9c4.7-4.7 4.7-12.3 0-17zM208 384c-97.3 0-176-78.7-176-176S110.7 32 208 32s176 78.7 176 176-78.7 176-176 176z" class=""></path></svg>';
     public $filter = '<svg style="width:25px;" aria-hidden="true" focusable="false" data-prefix="fal" data-icon="filter" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="svg-inline--fa fa-filter fa-w-16 fa-3x"><path fill="currentColor" d="M479.968 0H32.038C3.613 0-10.729 34.487 9.41 54.627L192 237.255V424a31.996 31.996 0 0 0 10.928 24.082l64 55.983c20.438 17.883 53.072 3.68 53.072-24.082V237.255L502.595 54.627C522.695 34.528 508.45 0 479.968 0zM288 224v256l-64-56V224L32 32h448L288 224z" class=""></path></svg>';
-    public function __construct($tabellen,$link,$href,$TABLE_SCHEMA){
+    public $excel = '<svg style="width:25px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M369.9 97.9L286 14C277 5 264.8-.1 252.1-.1H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h288c26.5 0 48-21.5 48-48V131.9c0-12.7-5.1-25-14.1-34zM332.1 128H256V51.9l76.1 76.1zM48 464V48h160v104c0 13.3 10.7 24 24 24h104v288H48zm212-240h-28.8c-4.4 0-8.4 2.4-10.5 6.3-18 33.1-22.2 42.4-28.6 57.7-13.9-29.1-6.9-17.3-28.6-57.7-2.1-3.9-6.2-6.3-10.6-6.3H124c-9.3 0-15 10-10.4 18l46.3 78-46.3 78c-4.7 8 1.1 18 10.4 18h28.9c4.4 0 8.4-2.4 10.5-6.3 21.7-40 23-45 28.6-57.7 14.9 30.2 5.9 15.9 28.6 57.7 2.1 3.9 6.2 6.3 10.6 6.3H260c9.3 0 15-10 10.4-18L224 320c.7-1.1 30.3-50.5 46.3-78 4.7-8-1.1-18-10.3-18z"/></svg>';
+    public $includeBeforeArray = array();
+    public $includeAfterArray = array();
+    public function __construct($tabellen,$link,$href,$TABLE_SCHEMA,$downloadFolder="",$autoload_file=""){
         if(!is_array($tabellen)) {
             throw new Exception("Lijst met tabellen moeten als Array worden opgegeven");
         }
@@ -30,6 +43,17 @@ class CRUD{
         }
         $this->tabellen = $tabellen_as_objects;
         $this->TABLE_SCHEMA = $TABLE_SCHEMA;
+        $this->downloadFolder = $downloadFolder;
+        $this->autoload_file = $autoload_file;
+        if(!empty($downloadFolder) && !is_dir($downloadFolder)){
+            throw new Exception("De gegeven download folder bestaat niet");
+        }
+        if(!empty($autoload_file) && !is_file($autoload_file)){
+            throw new Exception("De gegeven autoload file bestaat niet");
+        }
+        if(!empty($downloadFolder) && empty($autoload_file)){
+            throw new Exception("Er moet een autoload file worden opgegeven als download folder is opgegeven. installeer PhpOffice/PhpSpreadsheet via composer");
+        }
     }
 
     public function __get($TABLE_NAME){
@@ -39,6 +63,93 @@ class CRUD{
             }
         }
         throw new Exception("tabel bestaat niet, gelieve een andere tabel te kiezen.");
+    }
+
+    public function downloadExcelFile($table){
+        if($this->downloadFolder==""){
+            throw new Exception("Download folder moet worden opgegeven bij de configuratie.");
+        }else{
+            //get data of table
+            $data = $this->__get($table)->getData();
+            // echo json_encode($data);
+            if(empty($data)){
+                throw new Exception("Deze tabel is leeg.");
+            }
+
+            $headers = array();
+            foreach($data[0] as $key=>$value){
+                array_push($headers,$key);
+            }
+
+            //init
+            require_once $this->autoload_file;
+
+            $row = 1;
+            $collumn_index = 0; //max 'HH'
+            $collums = array("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","AA","AB","AC","AD","AE","AF","AG","AH","AI","AJ","AK","AL","AM","AN","AO","AP","AQ","AR","AS","AT","AU","AV","AW","AX","AY","AZ","BA","BB","BC","BD","BE","BF","BG","BH","BI","BJ","BK","BL","BM","BN","BO","BP","BQ","BR","BS","BT","BU","BV","BW","BX","BY","BZ","CA","CB","CC","CD","CE","CF","CG","CH","CI","CJ","CK","CL","CM","CN","CO","CP","CQ","CR","CS","CT","CU","CV","CW","CX","CY","CZ","DA","DB","DC","DD","DE","DF","DG","DH","DI","DJ","DK","DL","DM","DN","DO","DP","DQ","DR","DS","DT","DU","DV","DW","DX","DY","DZ","EA","EB","EC","ED","EE","EF","EG","EH","EI","EJ","EK","EL","EM","EN","EO","EP","EQ","ER","ES","ET","EU","EV","EW","EX","EY","EZ","FA","FB","FC","FD","FE","FF","FG","FH","FI","FJ","FK","FL","FM","FN","FO","FP","FQ","FR","FS","FT","FU","FV","FW","FX","FY","FZ","GA","GB","GC","GD","GE","GF","GG","GH","GI","GJ","GK","GL","GM","GN","GO","GP","GQ","GR","GS","GT","GU","GV","GW","GX","GY","GZ","HA","HB","HC","HD","HE","HF","HG","HH");
+            $lastLetter = $collums[count($headers)-1];
+
+            $spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $styleArray = [
+                'font' => [
+                    'bold' => true,
+                ],
+                'alignment' => [
+                    'horizontal' => PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                    'vertical' => PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP,
+                ],
+                'borders' => [
+                    'bottom' => [
+                        'borderStyle' => PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    ],
+                ],
+                'fill' => [
+                    'fillType' => PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'color' => [
+                        'rgb' => 'E1E1E1',
+                    ]
+                ],
+            ];
+            $styleData = [
+                'alignment' => [
+                    'horizontal' => PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                    'vertical' => PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP,
+                ]
+            ];
+
+
+            //headers
+
+            //foreach header
+            foreach($headers as $header){
+                error_log("".$collums[$collumn_index].$row." with ".$header."");
+                $sheet->setCellValue("".$collums[$collumn_index].$row,$header."");
+                $spreadsheet->getActiveSheet()->getColumnDimension($collums[$collumn_index])->setAutoSize(true);
+                $collumn_index++;
+            }
+
+            $spreadsheet->getActiveSheet()->getStyle("A".$row.":".$lastLetter.$row)->applyFromArray($styleArray);
+            $sheet->calculateColumnWidths();
+
+            //data
+            foreach ($data as $key => $value_row) {
+                $collumn_index = 0;
+                $row++;
+                foreach($value_row as $key_col => $col){
+                    $sheet->setCellValue($collums[$collumn_index].$row,$col);
+                    $collumn_index++;
+                }
+                $spreadsheet->getActiveSheet()->getStyle("A".$row.":".$lastLetter.$row)->applyFromArray($styleData);
+            }
+            // $spreadsheet->getActiveSheet()->getStyle('F1:'.$collums[$collumn_index].$row)->getAlignment()->setWrapText(true);
+            $spreadsheet->getActiveSheet()->setAutoFilter('A1:'.$lastLetter.$row);
+            $writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $filename = $table."-".time().".xlsx";
+            $path = $this->downloadFolder."/".$filename;
+            $writer->save($path);
+            return $filename;
+        }
     }
 
     public function renderNavbar($active_TABLE_NAME=null,$search=null,$update_or_delete=null,$create=null){
@@ -159,6 +270,21 @@ class CRUD{
                 $navbar .='<button class="btn btn-outline-success my-2 my-sm-0" type="submit">'."Aantal per pagina".'</button>';
                 $navbar .='</form>';
                 $navbar .='</li>';
+                if(isset($this->downloadFolder) && $this->downloadFolder!=""){
+                    $navbar .='<li class="nav-item col" style="list-style-type:none; ">';
+                    $navbar .= '<a href="'.$this->href.'?table='.$active_TABLE_NAME.'&excel=1'.
+                        (isset($search) ? '&search='.$search : '').
+                        (isset($_REQUEST["page"]) ? '&page='.$_REQUEST["page"] : '').
+                        (isset($_REQUEST["sort_column_name"]) ? '&sort_column_name='.$_REQUEST["sort_column_name"] : '').
+                        (isset($_REQUEST["sort_direction"]) ? '&sort_direction='.$_REQUEST["sort_direction"] : '').
+                        (isset($_REQUEST["limit"]) ? '&limit='.$_REQUEST["limit"] : '').
+                        '" class="nav-link">';
+                    $navbar .='<button class="btn btn-outline-success my-2 my-sm-0" style="padding: 6px;" >';
+                    $navbar .=$this->excel;
+                    $navbar .='</button>';
+                    $navbar .='</a>';
+                    $navbar .='</li>';
+                }
             }
         }
         $navbar .='</ul>';
@@ -175,14 +301,17 @@ class CRUD{
         );
     }
     private function echoScript(){
+        // echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.0/axios.min.js" integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>';
         echo "<script>";
         echo "const tableNameCurrent = new URLSearchParams(window. location. search).get('table');";
         echo 'const tableNames ='.json_encode($this->tabellen).'.map(t=>t.TABLE_NAME).filter(t=>t!==tableNameCurrent);';
         echo 'const tables ='.json_encode($this->tabellen).';';
         echo 'function startContextMenuEvent(e){if("TD"==e.target.nodeName&&"TR"==e.target.parentNode.nodeName){e.target.id;let t=e.target.innerText,n=e.target.parentNode.dataset.editlink;document.getElementsByClassName("ContextMenu-item")[0].onclick=function(){location.href=n};const o=document.getElementsByClassName("ContextMenu_submenu")[0],a=tableNames.map(e=>`<li class="ContextMenu-item" onclick="location.href=\'https://ilt.kuleuven.be/stan/admin/crud/?table=${e}&update_or_delete=1&primary_key_name=id&primary_key_value=${t}&page=${new URLSearchParams(window.location.search).get("page")}&sort_column_name=${new URLSearchParams(window.location.search).get("sort_column_name")}&sort_direction=${new URLSearchParams(window.location.search).get("sort_direction")}&limit=${new URLSearchParams(window.location.search).get("limit")}\'">${e}</li>`);o.innerHTML=a.join(""),changeContextMenuXY(e.clientX,e.clientY+window.scrollY),showContextMenu()}}function dismissContextMenu(){console.log("dismissing context menu"),document.getElementsByClassName("ContextMenu")[0].classList.remove("is-open")}function showContextMenu(){document.getElementsByClassName("ContextMenu")[0].classList.add("is-open")}function changeContextMenuXY(e,t){let n=document.getElementsByClassName("ContextMenu")[0];n.style.left=e+"px",n.style.top=t+"px"}document.addEventListener("click",function(e){document.getElementsByClassName("ContextMenu")[0].classList.contains("is-open")&&dismissContextMenu()},!1),document.addEventListener?document.addEventListener("contextmenu",function(e){e.preventDefault(),startContextMenuEvent(e)},!1):document.attachEvent("oncontextmenu",function(e){e.preventDefault(),startContextMenuEvent(e),window.event.returnValue=!1});';
         echo 'function addCssLinkToHead(e){var t=document.createElement("link");t.type="text/css",t.rel="stylesheet",t.href=e,document.getElementsByTagName("head")[0].appendChild(t)}';
-        echo 'addCssLinkToHead("https://ilt.kuleuven.be/php72/includes/styles/contextMenu.css");';
         echo "</script>";
+        echo "<style>";
+        echo ".ContextMenu{display:none;list-style:none;margin:0;max-width:250px;min-width:125px;padding:0;position:absolute;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;z-index:99999}.ContextMenu_submenu{display:none;list-style:none;margin:0;max-width:250px;min-width:125px;padding:0;position:absolute;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;z-index:99999}#ContextMenu_submenuOpener:hover>.ContextMenu_submenu{display:block}.ContextMenu--theme-default{background-color:#fff;border:1px solid rgba(0,0,0,.2);-webkit-box-shadow:0 2px 5px rgba(0,0,0,.15);box-shadow:0 2px 5px rgba(0,0,0,.15);font-size:16px;outline:0;padding:2px 0}.ContextMenu--theme-default .ContextMenu-item{padding:6px 12px}.ContextMenu--theme-default .ContextMenu-item:focus,.ContextMenu--theme-default .ContextMenu-item:hover{background-color:rgba(0,0,0,.05)}.ContextMenu--theme-default .ContextMenu-item:focus{outline:0}.ContextMenu--theme-default .ContextMenu-divider{background-color:rgba(0,0,0,.15)}.ContextMenu.is-open{display:block}.ContextMenu-item{cursor:pointer;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ContextMenu-divider{height:1px;margin:4px 0}";
+        echo "</style>";
     }
 
     public function renderPaneel(){
@@ -191,7 +320,7 @@ class CRUD{
                 if(!is_string($this->href) || empty($this->href)){
                     throw new Exception("Parameter 'href' moet een string zijn en niet leeg zijn, dit zou de default locatie moeten zijn waar het paneel wordt getoont.");
                 }
-                //add scripts
+                $this->renderIncludeBefore();
                 echo '<ul
                     class="ContextMenu ContextMenu--theme-default"
                     data-contextmenu="0"
@@ -201,7 +330,7 @@ class CRUD{
                     <li class="ContextMenu-item">Aanpassen...</li>
                     <li class="ContextMenu-item" id="ContextMenu_submenuOpener">
                     Aanpassen als key in...
-                    <img style="width: 19px;margin-top: 3px;"src="/php72/ici/_images/icons/arrow-right-grey.svg" alt=">">
+                    <img style="width: 19px;margin-top: 3px;"src="/php80/ici/_images/icons/arrow-right-grey.svg" alt=">">
                         <ul class="ContextMenu_submenu ContextMenu ContextMenu--theme-default" data-contextmenu="1" tabindex="-1" style="left: 204px;top: 40px;">
                         </ul>
                     </li>
@@ -217,6 +346,24 @@ class CRUD{
                     $_REQUEST["limit"] = 50;
                     $_REQUEST["sort_direction"] = "asc";
                     echo "<script>window.location.href = '".$this->href."?table=".$_REQUEST["table"]."&page=1&limit=50&sort_direction=asc';</script>";
+                }
+                if(isset($_REQUEST['excel']) && $_REQUEST['excel'] == 1){
+                    $filename =$this->downloadExcelFile(
+                        $_REQUEST["table"]
+                    );
+                    unset($_REQUEST["excel"]);
+                    //todo, dit beter maken
+                    echo "<a href='".$this->href
+                        ."?table=".$_REQUEST["table"]
+                        ."&page=".($_REQUEST["page"])
+                        ."&limit=".($_REQUEST["limit"])
+                        ."&sort_direction=".($_REQUEST["sort_direction"])
+                        .(isset($_REQUEST["search"])?"&search=".$_REQUEST["search"]:"")
+                        .(isset($_REQUEST["sort_column_name"])?"&sort_column_name=".$_REQUEST["sort_column_name"]:"")."'>".
+                        "<button class='btn btn-primary btn-block'>Keer terug</button>".
+                        "</a>";
+                    echo "<script>window.location.href = 'https://ilt.kuleuven.be/php80/protected/upload/crud/".$filename."'</script>";
+                    return;
                 }
 
                 echo $this->renderNavbar(isset($_REQUEST["table"])?$_REQUEST["table"]:null,isset($_REQUEST["search"])?$_REQUEST["search"]:null
@@ -234,8 +381,8 @@ class CRUD{
                     echo '<div class="alert alert-warning" role="alert">';
                     echo '<strong>Geen tabel gekozen. Gelieve een tabel te kiezen van de dropdown</strong> ';
                     echo '</div>';
-                    return;
                 }
+                $this->renderIncludeAfter();
             }else if($_SERVER['REQUEST_METHOD'] == "POST"){
                 if(!is_string($this->href) || empty($this->href)){
                     throw new Exception("Parameter 'href' moet een string zijn en niet leeg zijn, dit zou de default locatie moeten zijn waar het paneel wordt getoont.");
@@ -278,6 +425,34 @@ class CRUD{
             echo '</pre>';
             echo '</div>';
             echo '</div>';
+        }
+    }
+    private function renderIncludeBefore(){
+        if($_SERVER['REQUEST_METHOD'] == "GET"){
+            foreach($this->includeBeforeArray as $includeFile){
+                include_once($includeFile);
+            }
+        }
+    }
+    private function renderIncludeAfter(){
+        if($_SERVER['REQUEST_METHOD'] == "GET"){
+            foreach($this->includeAfterArray as $includeFile){
+                include_once($includeFile);
+            }
+        }
+    }
+    public function setIncludeBefore($array){
+        if(is_array($array)){
+            $this->includeBeforeArray = $array;
+        }else{
+            $this->includeBeforeArray = array($array);
+        }
+    }
+    public function setIncludeAfter($array){
+        if(is_array($array)){
+            $this->includeAfterArray = $array;
+        }else{
+            $this->includeAfterArray = array($array);
         }
     }
 }
@@ -427,7 +602,6 @@ class Tabel{
         $string .= "</thead>";
         $string .= "<tbody>";
         foreach($data as $row){
-            /*add primary key value and primary key name to the href*/
             $string .= "<tr style='cursor:pointer;'";
             $string .= " data-editlink='".$this->href."?table=".$this->TABLE_NAME."&update_or_delete=1".(isset($search)?"&search=".$search:"");
             $string .='&primary_key_name='.$this->getFirstPrimaryKeyName().'&primary_key_value='.$row[$this->getFirstPrimaryKeyName()].'';
@@ -894,10 +1068,6 @@ class Header{
             }
         }
         $string .= "name='".$this->COLUMN_NAME."' ";
-        // if($this->IS_NULLABLE == "NO"){
-        //     $string .= "required='required' ";
-        // }
-        //value
         if($this->COLUMN_KEY == "PRI"){
             $string .= "disabled='disabled' ";
             $string .="placeholder='Primary Key (wordt automatisch gegenereerd)' ";
