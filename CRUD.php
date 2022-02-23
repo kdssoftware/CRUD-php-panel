@@ -70,7 +70,7 @@ class CRUD{
             throw new Exception("Download folder moet worden opgegeven bij de configuratie.");
         }else{
             //get data of table
-            $data = $this->__get($table)->getData();
+            $data = $this->__get($table)->getDataFull();
             // echo json_encode($data);
             if(empty($data)){
                 throw new Exception("Deze tabel is leeg.");
@@ -123,7 +123,6 @@ class CRUD{
 
             //foreach header
             foreach($headers as $header){
-                error_log("".$collums[$collumn_index].$row." with ".$header."");
                 $sheet->setCellValue("".$collums[$collumn_index].$row,$header."");
                 $spreadsheet->getActiveSheet()->getColumnDimension($collums[$collumn_index])->setAutoSize(true);
                 $collumn_index++;
@@ -488,6 +487,16 @@ class Tabel{
         }
         return $string;
     }
+    public function getDataFull(){
+        $qry = "SELECT * FROM `".$this->TABLE_SCHEMA."`.`".$this->TABLE_NAME."` ";
+        $result = mysqli_query($this->link, $qry);
+        $data = array();
+        while($row = mysqli_fetch_assoc($result)){
+            $data[] = $row;
+        }
+        return $data;
+    }
+
     public function getData($search=null){
         $qry = "SELECT * FROM `".$this->TABLE_SCHEMA."`.`".$this->TABLE_NAME."` ";
         if(isset($search)){
@@ -725,6 +734,7 @@ class Tabel{
 
     public function delete($PRIMARY_KEY_NAME,$PRIMARY_KEY_VALUE){
         $qry = "DELETE FROM `".$this->TABLE_SCHEMA."`.`".$this->TABLE_NAME."` WHERE `".$PRIMARY_KEY_NAME."` = '".$PRIMARY_KEY_VALUE."';";
+        error_log("PHP Verbose: Stan CRUD Query ".$qry);
         mysqli_query($this->link, $qry);
         return;
     }
@@ -736,7 +746,7 @@ class Tabel{
             $header_info = $this->getHeaderInfo($key);
             if(isset($header_info["DATA_TYPE"]) && $header_info["COLUMN_KEY"] != "PRI"){
                 if($value == ""){
-                    $value = "NULL";
+                    $value = null;
                 }
                 if($first){
                     switch($header_info["DATA_TYPE"]){
@@ -752,7 +762,11 @@ class Tabel{
                         case "bit":
                         case "bool":
                         case "boolean":
-                            $qry .= "`".$key."` = ". $value;
+                            if(!$value){
+                                $qry .= "`".$key."` = NULL";
+                            }else{
+                                $qry .= "`".$key."` = ". $value;
+                            }
                             break;
                         case "varchar":
                         case "text":
@@ -766,7 +780,11 @@ class Tabel{
                         case "mediumtext":
                         case "longtext":
                         case "enum":
-                            $qry .= "`".$key."` = '".$value."'";
+                            if(!$value){
+                                $qry .= "`".$key."` = NULL";
+                            }else{
+                                $qry .= "`".$key."` = '". $value."'";
+                            }
                             break;
                         default:
                             $qry .= "`".$key."` = ". $value;
@@ -787,7 +805,12 @@ class Tabel{
                         case "bit":
                         case "bool":
                         case "boolean":
-                            ",`".$key."` = ".$value;
+                            if(!$value){
+                                $qry .= ", `".$key."` = NULL";
+                            }else{
+                                $qry .= ", `".$key."` = ". $value;
+                            }
+
                             break;
                         case "varchar":
                         case "text":
@@ -801,16 +824,21 @@ class Tabel{
                         case "mediumtext":
                         case "longtext":
                         case "enum":
-                            ",`".$key."` = '".$value."'";
+                            if(!$value){
+                                $qry .= ", `".$key."` = NULL";
+                            }else{
+                                $qry .= ", `".$key."` = '".$value."'";
+                            }
                             break;
                         default:
-                            ",`".$key."` = ".$value;
+                            $qry .= ",`".$key."` = ".$value;
                             break;
                     }
                 }
             }
         }
         $qry .= " WHERE `".$data["primary_key_name"]."` = ".$data["primary_key_value"].";";
+        error_log("PHP Verbose: Stan CRUD Query ".$qry);
         $result = mysqli_query($this->link, $qry);
         return;
     }
@@ -913,6 +941,7 @@ class Tabel{
             }
         }
         $qry .= ");";
+        error_log("PHP Verbose: Stan CRUD Query ".$qry);
         $result = mysqli_query($this->link, $qry);
         if(!$result){
             throw new Exception("Error bij het aanmaken van een nieuw record: ".mysqli_error($this->link));
@@ -1025,7 +1054,7 @@ class Header{
             case "real":
                 $string .="type='number' ";
                 if(isset($this->NUMERIC_SCALE) && $this->NUMERIC_SCALE > 0){
-                    $string .= "step='0.".str_repeat("0", $this->NUMERIC_SCALE)."' ";
+                    $string .= "step='0.".str_repeat("0", $this->NUMERIC_SCALE-1)."1' ";
                 }
                 if(isset($this->NUMERIC_PRECISION) && isset($this->NUMERIC_SCALE)){
                     $string .= "max='".( str_repeat("9",$this->NUMERIC_PRECISION-$this->NUMERIC_SCALE ));
