@@ -8,12 +8,12 @@
  * @requires: Bootstrap ^4.6
  * @requires: MySQL
  * @author: Karel De Smet (snakehead007)
- * @version: 1.4
+ * @version: 1.5.1
  * @since: 05/11/2021
  * @link: https://github.com/snakehead007/CRUD-php-panel
- * @lastUpdated: 23/02/2022
+ * @lastUpdated: 30/03/2022
  */
-
+ini_set('memory_limit', '-1');
 class CRUD{
     public $tabellen;
     public $TABLE_SCHEMA;
@@ -146,6 +146,7 @@ class CRUD{
             $writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
             $filename = $table."-".time().".xlsx";
             $path = $this->downloadFolder."/".$filename;
+            $writer->setPreCalculateFormulas(false);
             $writer->save($path);
             return $filename;
         }
@@ -309,7 +310,7 @@ class CRUD{
         echo 'function addCssLinkToHead(e){var t=document.createElement("link");t.type="text/css",t.rel="stylesheet",t.href=e,document.getElementsByTagName("head")[0].appendChild(t)}';
         echo "</script>";
         echo "<style>";
-        echo ".ContextMenu{display:none;list-style:none;margin:0;max-width:250px;min-width:125px;padding:0;position:absolute;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;z-index:99999}.ContextMenu_submenu{display:none;list-style:none;margin:0;max-width:250px;min-width:125px;padding:0;position:absolute;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;z-index:99999}#ContextMenu_submenuOpener:hover>.ContextMenu_submenu{display:block}.ContextMenu--theme-default{background-color:#fff;border:1px solid rgba(0,0,0,.2);-webkit-box-shadow:0 2px 5px rgba(0,0,0,.15);box-shadow:0 2px 5px rgba(0,0,0,.15);font-size:16px;outline:0;padding:2px 0}.ContextMenu--theme-default .ContextMenu-item{padding:6px 12px}.ContextMenu--theme-default .ContextMenu-item:focus,.ContextMenu--theme-default .ContextMenu-item:hover{background-color:rgba(0,0,0,.05)}.ContextMenu--theme-default .ContextMenu-item:focus{outline:0}.ContextMenu--theme-default .ContextMenu-divider{background-color:rgba(0,0,0,.15)}.ContextMenu.is-open{display:block}.ContextMenu-item{cursor:pointer;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ContextMenu-divider{height:1px;margin:4px 0}";
+        echo ".ContextMenu{display:none;list-style:none;margin:0;max-width:250px;min-width:125px;padding:0;position:absolute;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;z-index:99999}.ContextMenu_submenu{display:none;list-style:none;margin:0;max-width:250px;min-width:125px;padding:0;position:absolute;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;z-index:99999}.ContextMenu_submenuOpener:hover>.ContextMenu_submenu{display:block}.ContextMenu--theme-default{background-color:#fff;border:1px solid rgba(0,0,0,.2);-webkit-box-shadow:0 2px 5px rgba(0,0,0,.15);box-shadow:0 2px 5px rgba(0,0,0,.15);font-size:16px;outline:0;padding:2px 0}.ContextMenu--theme-default .ContextMenu-item{padding:6px 12px}.ContextMenu--theme-default .ContextMenu-item:focus,.ContextMenu--theme-default .ContextMenu-item:hover{background-color:rgba(0,0,0,.05)}.ContextMenu--theme-default .ContextMenu-item:focus{outline:0}.ContextMenu--theme-default .ContextMenu-divider{background-color:rgba(0,0,0,.15)}.ContextMenu.is-open{display:block}.ContextMenu-item{cursor:pointer;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ContextMenu-divider{height:1px;margin:4px 0}";
         echo "</style>";
     }
 
@@ -327,9 +328,15 @@ class CRUD{
                     style="left: 144px; top: 129px"
                     >
                     <li class="ContextMenu-item">Aanpassen...</li>
-                    <li class="ContextMenu-item" id="ContextMenu_submenuOpener">
-                    Aanpassen als key in...
-                    <img style="width: 19px;margin-top: 3px;"src="/php80/ici/_images/icons/arrow-right-grey.svg" alt=">">
+                    <li class="ContextMenu-item ContextMenu_submenuOpener">
+                        Aanpassen als key in...
+                        <img style="width: 19px;margin-top: 3px;"src="/php80/ici/_images/icons/arrow-right-grey.svg" alt=">">
+                        <ul class="ContextMenu_submenu ContextMenu ContextMenu--theme-default" data-contextmenu="1" tabindex="-1" style="left: 204px;top: 40px;">
+                        </ul>
+                    </li>
+                    <li class="ContextMenu-item ContextMenu_submenuOpener">
+                        Bekijken als key in...
+                        <img style="width: 19px;margin-top: 3px;"src="/php80/ici/_images/icons/arrow-right-grey.svg" alt=">">
                         <ul class="ContextMenu_submenu ContextMenu ContextMenu--theme-default" data-contextmenu="1" tabindex="-1" style="left: 204px;top: 40px;">
                         </ul>
                     </li>
@@ -504,29 +511,29 @@ class Tabel{
             $first = true;
             foreach($this->headers as $header){
                 if($first){
-                    $qry .= $header->COLUMN_NAME." LIKE '%".$search."%'";
+                    $qry .= $header->COLUMN_NAME." LIKE '%".mysqli_real_escape_string($this->link,$search)."%'";
                     $first = false;
                 }else{
-                    $qry .= " OR ".$header->COLUMN_NAME." LIKE '%".$search."%'";
+                    $qry .= " OR ".$header->COLUMN_NAME." LIKE '%".mysqli_real_escape_string($this->link,$search)."%'";
                 }
             }
         }
         if(isset($this->sort_column_name) && $this->sort_column_name != ""){
-            $qry .= " ORDER BY ".$this->sort_column_name;
+            $qry .= " ORDER BY ".mysqli_real_escape_string($this->link,$this->sort_column_name);
             if(isset($this->sort_direction) && ($this->sort_direction == "asc" || $this->sort_direction == "desc")){
-                $qry .= " ".$this->sort_direction;
+                $qry .= " ".mysqli_real_escape_string($this->link,$this->sort_direction);
             }else{
                 $qry .= " ASC";
             }
         }
         if(isset($this->limit) && $this->limit > 0){
-            $qry .= " LIMIT ".$this->limit;
+            $qry .= " LIMIT ".mysqli_real_escape_string($this->link,$this->limit);;
         }else{
             $qry .= " LIMIT 50";
         }
         if(isset($this->page) && $this->page > 0 && $this->limit > 0){
             $offset = ($this->page -1) * $this->limit;
-            $qry .= " OFFSET ".$offset;
+            $qry .= " OFFSET ".mysqli_real_escape_string($this->link,$offset);
         }else{
             $qry .= " OFFSET 0";
         }
@@ -572,16 +579,19 @@ class Tabel{
         $string .= "<tr>";
         foreach($this->headers as $header){
             $string .= "<th>";
-            $string .="<div style='display: flex;justify-content: space-between;align-items: center;'>";
-            $string .="<div>";
+            $string .="<div style=\"width:100%;display: inline-flex;height: 100%;flex-direction: column;align-items: stretch;justify-content: flex-start;align-content: space-between;flex-wrap: nowrap;\">";
+            $string .="<div >";
             $string .= $header;
-            if(isset($header->COLUMN_COMMENT) && trim($header->COLUMN_COMMENT) !=""){
-                $string .= "<small class='text-muted'>&nbsp;&nbsp;&nbsp;".$header->COLUMN_COMMENT."</small>";
-            }
-            $string .= "<br/>";
-            $string .= "<small>".$header->COLUMN_TYPE."</small>";
             $string .= "</div>";
-            $string .="<div>";
+            $string .= "<div>";
+            if(isset($header->COLUMN_COMMENT) && trim($header->COLUMN_COMMENT) !=""){
+                $string .= "<small class='text-muted'>".$header->COLUMN_COMMENT."</small>";
+            }else{
+                $string .="<small>&nbsp;</small>";
+            }
+            $string .= "</div>";
+            $string .="<div style=\"display: flex;flex-direction: row;justify-content: space-between;align-items: center;\">";
+            $string .= "<small style='padding-right:3px;'>".$header->COLUMN_TYPE."</small>";
             if($this->sort_column_name == $header->COLUMN_NAME){
                 if($this->sort_direction == "asc"){
                     $string .= "<a class='text-muted' href='".$this->href."?";
@@ -648,7 +658,7 @@ class Tabel{
         if(isset($_REQUEST["page"])){$string .='<input type="hidden" name="page" value="'.$_REQUEST["page"].'">';}
         if(isset($_REQUEST["sort_column_name"])){$string .='<input type="hidden" name="sort_column_name" value="'.$_REQUEST["sort_column_name"].'">';}
         if(isset($_REQUEST["limit"])){$string .='<input type="hidden" name="limit" value="'.$_REQUEST["limit"].'">';}
-        if(isset($_REQUEST["search"])){$string .='<input type="hidden" name="limit" value="'.$_REQUEST["search"].'">';}
+        if(isset($_REQUEST["search"])){$string .='<input type="hidden" name="search" value="'.$_REQUEST["search"].'">';}
         $string .= "<input type='hidden' name='create' value='1'>";
         isset($_REQUEST["search"]) ? $string .= "<input type='hidden' name='search' value='".$_REQUEST["search"]."'>":null;
         $string .= "</div>";
@@ -696,7 +706,7 @@ class Tabel{
         if(isset($_REQUEST["page"])){$string .='<input type="hidden" name="page" value="'.$_REQUEST["page"].'">';}
         if(isset($_REQUEST["sort_column_name"])){$string .='<input type="hidden" name="sort_column_name" value="'.$_REQUEST["sort_column_name"].'">';}
         if(isset($_REQUEST["limit"])){$string .='<input type="hidden" name="limit" value="'.$_REQUEST["limit"].'">';}
-        if(isset($_REQUEST["search"])){$string .='<input type="hidden" name="limit" value="'.$_REQUEST["search"].'">';}
+        if(isset($_REQUEST["search"])){$string .='<input type="hidden" name="search" value="'.$_REQUEST["search"].'">';}
         $string .= "<input type='hidden' name='table' value='".$_REQUEST["table"]."'>";
         $string .= "<input type='hidden' name='update' value='1'>";
         if(isset($search)){
@@ -734,7 +744,7 @@ class Tabel{
 
     public function delete($PRIMARY_KEY_NAME,$PRIMARY_KEY_VALUE){
         $qry = "DELETE FROM `".$this->TABLE_SCHEMA."`.`".$this->TABLE_NAME."` WHERE `".$PRIMARY_KEY_NAME."` = '".$PRIMARY_KEY_VALUE."';";
-        error_log("PHP Verbose: Stan CRUD Query ".$qry);
+        error_log("PHP Verbose: CRUD Query ".$qry);
         mysqli_query($this->link, $qry);
         return;
     }
@@ -765,7 +775,7 @@ class Tabel{
                             if(!$value){
                                 $qry .= "`".$key."` = NULL";
                             }else{
-                                $qry .= "`".$key."` = ". $value;
+                                $qry .= "`".$key."` = ". mysqli_real_escape_string($this->link,$value);
                             }
                             break;
                         case "varchar":
@@ -783,11 +793,11 @@ class Tabel{
                             if(!$value){
                                 $qry .= "`".$key."` = NULL";
                             }else{
-                                $qry .= "`".$key."` = '". $value."'";
+                                $qry .= "`".$key."` = '". mysqli_real_escape_string($this->link,$value)."'";
                             }
                             break;
                         default:
-                            $qry .= "`".$key."` = ". $value;
+                            $qry .= "`".$key."` = ". mysqli_real_escape_string($this->link,$value);
                             break;
                     }
                     $first = false;
@@ -808,7 +818,7 @@ class Tabel{
                             if(!$value){
                                 $qry .= ", `".$key."` = NULL";
                             }else{
-                                $qry .= ", `".$key."` = ". $value;
+                                $qry .= ", `".$key."` = ". mysqli_real_escape_string($this->link,$value);
                             }
 
                             break;
@@ -827,18 +837,18 @@ class Tabel{
                             if(!$value){
                                 $qry .= ", `".$key."` = NULL";
                             }else{
-                                $qry .= ", `".$key."` = '".$value."'";
+                                $qry .= ", `".$key."` = '".mysqli_real_escape_string($this->link,$value)."'";
                             }
                             break;
                         default:
-                            $qry .= ",`".$key."` = ".$value;
+                            $qry .= ",`".$key."` = ".mysqli_real_escape_string($this->link,$value);
                             break;
                     }
                 }
             }
         }
         $qry .= " WHERE `".$data["primary_key_name"]."` = ".$data["primary_key_value"].";";
-        error_log("PHP Verbose: Stan CRUD Query ".$qry);
+        error_log("PHP Verbose: CRUD Query ".$qry);
         $result = mysqli_query($this->link, $qry);
         return;
     }
@@ -853,10 +863,10 @@ class Tabel{
             $header_info = $this->getHeaderInfo($header->COLUMN_NAME);
             if(isset($header_info["DATA_TYPE"]) && $header_info["COLUMN_KEY"] != "PRI") {
                 if ($first) {
-                    $qry .= "`" . $header->COLUMN_NAME . "`";
+                    $qry .= "`" . mysqli_real_escape_string($this->link,$header->COLUMN_NAME) . "`";
                     $first = false;
                 } else {
-                    $qry .= ", `" . $header->COLUMN_NAME . "`";
+                    $qry .= ", `" . mysqli_real_escape_string($this->link,$header->COLUMN_NAME) . "`";
                 }
             }
         }
@@ -941,7 +951,7 @@ class Tabel{
             }
         }
         $qry .= ");";
-        error_log("PHP Verbose: Stan CRUD Query ".$qry);
+        error_log("PHP Verbose: CRUD Query ".$qry);
         $result = mysqli_query($this->link, $qry);
         if(!$result){
             throw new Exception("Error bij het aanmaken van een nieuw record: ".mysqli_error($this->link));
@@ -1017,7 +1027,7 @@ class Header{
         $string = "";
         $string .= "<div class='col-md-6 mb-3'>";
         $string .= "<div class='form-group'>";
-        $string .= "<label for='".$this->COLUMN_NAME."'>".$this->COLUMN_NAME."</label>";
+        $string .= "<label for='".$this->COLUMN_NAME."'>".$this->COLUMN_NAME.($this->COLUMN_COMMENT?" <small class='text-muted'>(".$this->COLUMN_COMMENT.")</small>":"")." </label>";
         $string .= $this->create_input_element();
         $string .= "</div>";
         $string .= "</div>";
@@ -1028,7 +1038,7 @@ class Header{
         $string = "";
         $string .= "<div class='col-md-6 mb-3'>";
         $string .= "<div class='form-group'>";
-        $string .= "<label for='".$this->COLUMN_NAME."'>".$this->COLUMN_NAME."</label>";
+        $string .= "<label for='".$this->COLUMN_NAME."'>".$this->COLUMN_NAME.($this->COLUMN_COMMENT?" <small class='text-muted'>(".$this->COLUMN_COMMENT.")</small>":"")." </label>";
         $string .= $this->create_input_element($value);
         $string .= "</div>";
         $string .= "</div>";
